@@ -1,35 +1,11 @@
-document.addEventListener('DOMContentLoaded', (event) => {
+document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const scale = 20;
     const rows = canvas.height / scale;
     const columns = canvas.width / scale;
 
-    let snake;
-
-    (function setup() {
-        snake = new Snake();
-        fruit = new Fruit();
-
-        window.setInterval(() => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            fruit.draw();
-            snake.update();
-            snake.draw();
-
-            if (snake.eat(fruit)) {
-                fruit.pickLocation();
-            }
-
-            document.querySelector('.score').innerText = snake.total;
-        }, 250);
-    }());
-
-    window.addEventListener('keydown', ((evt) => {
-        const direction = evt.key.replace('Arrow', '');
-        snake.changeDirection(direction);
-    }));
-
+    // Klassendefinitionen vor der Verwendung
     class Snake {
         constructor() {
             this.x = 0;
@@ -51,27 +27,26 @@ document.addEventListener('DOMContentLoaded', (event) => {
         }
 
         update() {
-            for (let i = 0; i < this.tail.length - 1; i++) {
-                this.tail[i] = this.tail[i + 1];
+            for (let i = this.tail.length - 1; i > 0; i--) {
+                this.tail[i] = this.tail[i - 1];
             }
-
-            this.tail[this.total - 1] = { x: this.x, y: this.y };
+            if (this.total >= 1) {
+                this.tail[0] = { x: this.x, y: this.y };
+            }
 
             this.x += this.xSpeed;
             this.y += this.ySpeed;
 
+            // Randüberprüfung
             if (this.x >= canvas.width) {
                 this.x = 0;
             }
-
             if (this.y >= canvas.height) {
                 this.y = 0;
             }
-
             if (this.x < 0) {
                 this.x = canvas.width - scale;
             }
-
             if (this.y < 0) {
                 this.y = canvas.height - scale;
             }
@@ -109,6 +84,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
         eat(fruit) {
             if (this.x === fruit.x && this.y === fruit.y) {
                 this.total++;
+                this.tail.push({});
                 return true;
             }
             return false;
@@ -121,8 +97,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
         }
 
         pickLocation() {
-            this.x = (Math.floor(Math.random() * rows - 1) + 1) * scale;
-            this.y = (Math.floor(Math.random() * columns - 1) + 1) * scale;
+            this.x = (Math.floor(Math.random() * columns)) * scale;
+            this.y = (Math.floor(Math.random() * rows)) * scale;
         }
 
         draw() {
@@ -130,4 +106,27 @@ document.addEventListener('DOMContentLoaded', (event) => {
             ctx.fillRect(this.x, this.y, scale, scale);
         }
     }
+
+    // Instanziierung nach den Klassendefinitionen
+    const snake = new Snake();
+    const fruit = new Fruit();
+
+    window.setInterval(() => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        fruit.draw();
+        snake.update();
+        snake.draw();
+
+        if (snake.eat(fruit)) {
+            fruit.pickLocation();
+        }
+
+        document.querySelector('.score').innerText = snake.total;
+    }, 250);
+
+    window.addEventListener('keydown', (evt) => {
+        const direction = evt.key.replace('Arrow', '');
+        snake.changeDirection(direction);
+    });
 });
+
